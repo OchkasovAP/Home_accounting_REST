@@ -1,12 +1,17 @@
 package ru.ochkasovap.homeAccountingRest.services;
 
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +22,7 @@ import jakarta.persistence.criteria.Root;
 import ru.ochkasovap.homeAccountingRest.models.IncomeCategory;
 import ru.ochkasovap.homeAccountingRest.models.OutcomeCategory;
 import ru.ochkasovap.homeAccountingRest.models.User;
+import ru.ochkasovap.homeAccountingRest.repository.UserRepository;
 import ru.ochkasovap.homeAccountingRest.util.Category;
 import ru.ochkasovap.homeAccountingRest.util.OperationType;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.ForbiddenUsersActionException;
@@ -26,12 +32,17 @@ import ru.ochkasovap.homeAccountingRest.util.exceptions.ForbiddenUsersActionExce
 @Transactional(readOnly = true)
 public class CategoriesService {
 	@Autowired
-	private UserService userService;
+	private UserRepository userRepository;
 	@Autowired
 	private EntityManager entityManager;
 	
+	@Value("${default_Income_Categories}")
+	private String defaultIncomeCategories;
+	@Value("${default_Outcome_Categories}")
+	private String defaultOutcomeCategories;
+	
 	public List<? extends Category> findAllByUser(int userID, OperationType type) {
-		User user = userService.findById(userID);
+		User user = userRepository.findById(userID).get();
 		List<? extends Category> categories = Collections.emptyList();
 		if(OperationType.INCOME.equals(type)) {
 			categories = user.getIncomeCategories();
@@ -67,13 +78,16 @@ public class CategoriesService {
 	}
 	@Transactional
 	public void create(int userID, Category category) {
-		User user = userService.findById(userID);
-		if (category instanceof IncomeCategory) {
-			user.getIncomeCategories().add((IncomeCategory) category);
-		} else if (category instanceof OutcomeCategory) {
-			user.getOutcomeCategories().add((OutcomeCategory) category);
-		}
-		category.setUser(user);
+		User user = userRepository.findById(userID).get();
+		addCategory(category, user);
+	}
+	@Transactional
+	public void addDefaultCategories(int userId) {
+		User user = userRepository.findById(userId).get();
+		user.setIncomeCategories(new ArrayList<>());
+		user.setOutcomeCategories(new ArrayList<>());
+		Stream.of(defaultIncomeCategories.split(";")).forEach(categoryName -> addCategory(OperationType.INCOME.newCategory(categoryName), user));
+		Stream.of(defaultOutcomeCategories.split(";")).forEach(categoryName -> addCategory(OperationType.OUTCOME.newCategory(categoryName), user));
 	}
 	@Transactional
 	public void remove(int userId, int categoryID, OperationType type) {
@@ -87,10 +101,23 @@ public class CategoriesService {
 		}
 		category.setUser(null);
 	}
+	
+	
+	private void addCategory(Category category, User user) {
+		if (category instanceof IncomeCategory) {
+			user.getIncomeCategories().add((IncomeCategory) category);
+		} else if (category instanceof OutcomeCategory) {
+			user.getOutcomeCategories().add((OutcomeCategory) category);
+		}
+		category.setUser(user);
+	}
+ 	
+	
 	private void checkUsersRights(Category category, int userId) {
 		if(category.getUser().getId()!=userId) {
 			throw new ForbiddenUsersActionException();
 		}
 	}
+
 
 }

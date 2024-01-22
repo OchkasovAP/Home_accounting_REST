@@ -1,6 +1,7 @@
-package ru.ochkasovap.homeAccountingRest.dto;
+package ru.ochkasovap.homeAccountingRest.util;
 
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Component;
@@ -8,11 +9,14 @@ import org.springframework.stereotype.Component;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.servlet.http.HttpServletRequest;
-import ru.ochkasovap.homeAccountingRest.util.DateUtil;
 @Component
 public class DateRange {
 	private Date startDate;
-	private Date endDate;
+	private Date endDate = new Date();
+	
+	public static DateRange defaultDateRange() {
+		return new DateRange(new GregorianCalendar(1900,0,1).getTime(), new Date());
+	}
 	
 	public DateRange() {
 		

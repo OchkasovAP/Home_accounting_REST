@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 
 public class AccountDTO {
 	private int id;
-	
+	@NotNull(message = "Поле не должно быть пустым")
 	private BigDecimal balance;
 
 	private boolean containInGenBalance;

@@ -18,12 +18,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.persistence.EntityManager;
-import ru.ochkasovap.homeAccountingRest.dto.DateRange;
 import ru.ochkasovap.homeAccountingRest.models.CashAccount;
 import ru.ochkasovap.homeAccountingRest.models.Income;
 import ru.ochkasovap.homeAccountingRest.models.IncomeCategory;
 import ru.ochkasovap.homeAccountingRest.models.User;
+import ru.ochkasovap.homeAccountingRest.util.DateRange;
 import ru.ochkasovap.homeAccountingRest.util.Operation;
+import ru.ochkasovap.homeAccountingRest.util.OperationFilter;
+import ru.ochkasovap.homeAccountingRest.util.OperationType;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.ForbiddenUsersActionException;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +47,7 @@ class IncomesServiceTest {
 	private User user;
 	private List<CashAccount> accounts;
 	private List<IncomeCategory> categories; 
+	private OperationFilter filter;
 	
 	@BeforeEach
 	void setUp() {
@@ -55,6 +58,7 @@ class IncomesServiceTest {
 		initAccounts();
 		initCategories();
 		initIncomes();
+		initFilter();
 	}
 	void initAccounts() {
 		accounts.addAll(List.of(
@@ -107,6 +111,10 @@ class IncomesServiceTest {
 				.cashAccount(accounts.get(1))
 				.category(categories.get(1))
 				.user(user).build();
+	}
+	void initFilter() {
+		filter = new OperationFilter();
+		filter.setType(OperationType.INCOME);
 	}
 	
 	@Test
@@ -168,29 +176,26 @@ class IncomesServiceTest {
 	}
 	@Test
 	void findAll_WithoutFilter() {
-		Income simpleFilter = new Income.Builder().user(user).build();
 		when(userService.findById(0)).thenReturn(user);
-		List<? extends Operation> actual = service.findAll(simpleFilter, null);
+		List<? extends Operation> actual = service.findAll(filter, user.getId());
 		List<? extends Operation> expected = List.of(incomes.get(1),incomes.get(2),incomes.get(3),incomes.get(0));
 		assertEquals(expected, actual);
 	}
 	@Test
 	void findAll_CategoryAndAccountFilter() {
-		Income filter = new Income.Builder()
-				.user(user)
-				.cashAccount(accounts.get(0))
-				.category(categories.get(0)).build();
+		filter.setAccount(accounts.get(0).getName());
+		filter.setCategory(categories.get(0).getName());
 		when(userService.findById(0)).thenReturn(user);
-		List<? extends Operation> actual = service.findAll(filter, null);
+		List<? extends Operation> actual = service.findAll(filter, user.getId());
 		List<? extends Operation> expected = List.of(incomes.get(0));
 		assertEquals(expected, actual);
 	}
 	@Test
 	void findAll_DateRangeFilter() {
-		Income filter = new Income.Builder().user(user).build();
 		when(userService.findById(0)).thenReturn(user);
 		DateRange dateRange = new DateRange(new GregorianCalendar(2023,12,04).getTime(), new Date());
-		List<? extends Operation> actual = service.findAll(filter, dateRange);
+		filter.setDateRange(dateRange);
+		List<? extends Operation> actual = service.findAll(filter, user.getId());
 		List<? extends Operation> expected = List.of(incomes.get(2),incomes.get(3),incomes.get(0));
 		assertEquals(expected, actual);
 	}

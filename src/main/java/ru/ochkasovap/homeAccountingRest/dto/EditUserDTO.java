@@ -1,12 +1,11 @@
 package ru.ochkasovap.homeAccountingRest.dto;
 
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import ru.ochkasovap.homeAccountingRest.dto.RegistrationDTO.Builder;
 
-public class AuthenticationDTO {
-
+public class EditUserDTO {
 	private int id;
 	
 	@NotEmpty(message = "Поле не должно быть пустым")
@@ -14,7 +13,6 @@ public class AuthenticationDTO {
 	private String login;
 	
 	@Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=\\S+$).{6,20}$", message = "Пароль должен иметь 1 цифру, 1 строчную, 1 прописную латинскую букву и быть размером не 6-20 символов")
-	@NotNull(message = "Поле не должно быть пустым")
 	private String password;
 	
 	@Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=\\S+$).{6,20}$", message = "Пароль должен иметь 1 цифру, 1 строчную, 1 прописную латинскую букву и быть размером не 6-20 символов")
@@ -25,32 +23,35 @@ public class AuthenticationDTO {
 	private String role;
 	
 	public static class Builder {
-		private AuthenticationDTO authenticationDTO;
-		private Builder(int id, String login, String password) {
-			authenticationDTO = new AuthenticationDTO();
-			authenticationDTO.setId(id);
-			authenticationDTO.setLogin(login);
-			authenticationDTO.setPassword(password);
+		private EditUserDTO editUserDTO;
+		private Builder(int id, String login) {
+			editUserDTO = new EditUserDTO();
+			editUserDTO.setId(id);
+			editUserDTO.setLogin(login);
 		}
-		public AuthenticationDTO build() {
-			return authenticationDTO;
+		public EditUserDTO build() {
+			return editUserDTO;
+		}
+		public Builder password(String password) {
+			editUserDTO.setPassword(password);
+			return this;
 		}
 		public Builder newPassword(String newPassword) {
-			authenticationDTO.setNewPassword(newPassword);
+			editUserDTO.setNewPassword(newPassword);
 			return this;
 		}
 		public Builder repeatedNewPassword(String repeatedNewPassword) {
-			authenticationDTO.setRepeatedNewPassword(repeatedNewPassword);
+			editUserDTO.setRepeatedNewPassword(repeatedNewPassword);
 			return this;
 		}
 		public Builder role(String role) {
-			authenticationDTO.setRole(role);
+			editUserDTO.setRole(role);
 			return this;
 		}
 		
 	}
-	public static Builder builder(int id, String login, String password) {
-		return new Builder(id, login, password);
+	public static Builder builder(int id, String login) {
+		return new Builder(id, login);
 	}
 	
 	public int getId() {
@@ -100,5 +101,4 @@ public class AuthenticationDTO {
 	public void setRole(String role) {
 		this.role = role;
 	}
-
 }

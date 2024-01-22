@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
-import ru.ochkasovap.homeAccountingRest.dto.DateRange;
 import ru.ochkasovap.homeAccountingRest.dto.OperationDTO;
 import ru.ochkasovap.homeAccountingRest.models.CashAccount;
 import ru.ochkasovap.homeAccountingRest.models.Income;
@@ -20,8 +19,10 @@ import ru.ochkasovap.homeAccountingRest.models.User;
 import ru.ochkasovap.homeAccountingRest.repository.CashAccountRepository;
 import ru.ochkasovap.homeAccountingRest.repository.UserRepository;
 import ru.ochkasovap.homeAccountingRest.util.Category;
+import ru.ochkasovap.homeAccountingRest.util.DateRange;
 import ru.ochkasovap.homeAccountingRest.util.DateUtil;
 import ru.ochkasovap.homeAccountingRest.util.Operation;
+import ru.ochkasovap.homeAccountingRest.util.OperationFilter;
 import ru.ochkasovap.homeAccountingRest.util.OperationType;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.ForbiddenUsersActionException;
 
@@ -93,20 +94,18 @@ public class OperationsService {
 		}
 	}
 	
-	@Transactional(readOnly = true)
 	public Operation findById(int userId, int operationId, Class<? extends Operation> itemClass) {
 		Operation operation = Optional.ofNullable(entityManager.find(itemClass, operationId)).get();
 		checkUsersRights(operation, userId);
 		return operation;
 	}
 	
-	@Transactional(readOnly = true)
-	public List<? extends Operation> findAll(Operation filterInstance, DateRange dateRange) {
-		return findAllByUser(filterInstance)
+	public List<? extends Operation> findAll(OperationFilter filter, int userId) {
+		return findAllByUser(filter, userId)
 				.stream()
-				.filter(o -> operationInDateInterval(dateRange==null?defaultDateRange():dateRange, o)
-						&&operationIncludeCategory(filterInstance, o)
-						&&operationIncludeCashAccount(filterInstance, o))
+				.filter(o -> operationInDateInterval(filter.getDateRange(), o)
+						&&operationIncludeCategory(filter, o)
+						&&operationIncludeCashAccount(filter, o))
 				.sorted((o1, o2) -> {
 					int dateCompare = o1.getDate().compareTo(o2.getDate());
 					if (dateCompare != 0) {
@@ -117,11 +116,18 @@ public class OperationsService {
 				.toList();
 	}
 	
-	private List<? extends Operation> findAllByUser(Operation filterInstatnce) {
-		User user = userService.findById(filterInstatnce.getUser().getId());
-		if(OperationType.INCOME.equals(filterInstatnce.getType())) {
+	public void checkUsersRights(Operation operation, int userId) {
+		Operation operationFromDB = entityManager.find(operation.getClass(), operation.getId());
+		if(operationFromDB.getUser().getId()!=userId) {
+			throw new ForbiddenUsersActionException();
+		}
+	}
+	
+	private List<? extends Operation> findAllByUser(OperationFilter filter, int userId) {
+		User user = userService.findById(userId);
+		if(OperationType.INCOME.equals(filter.getType())) {
 			return user.getIncomes(); 
-		} else if(OperationType.OUTCOME.equals(filterInstatnce.getType())) {
+		} else if(OperationType.OUTCOME.equals(filter.getType())) {
 			return user.getOutcomes();
 		}
 		throw new IllegalArgumentException("Non correct operation type");
@@ -150,31 +156,25 @@ public class OperationsService {
 		model.setCashAccount(accountsService.findByNameAndUser(account.getName(), model.getUser()).get());
 		model.setCategory(categoriesService.findInDB(category).get());
 	}
-	private void checkUsersRights(Operation operation, int userId) {
-		if(operation.getUser().getId()!=userId) {
-			throw new ForbiddenUsersActionException();
-		}
-	}
-	private DateRange defaultDateRange() {
-		return new DateRange(new GregorianCalendar(1900,0,1).getTime(), new Date());
-	}
+	
 	private boolean operationInDateInterval(DateRange dateRange, Operation operation) {
 		Date operationDate = operation.getDate();
 		return operationDate.compareTo(dateRange.getStartDate()) >= 0
 				&& operationDate.compareTo(dateRange.getEndDate()) <= 0;
 	}
-	private boolean operationIncludeCategory(Operation filter, Operation comparedOperation) {
-		if (filter.getCategory()==null || filter.getCategory().getName()==null || comparedOperation.getCategory().getName().equals(filter.getCategory().getName())) {
+	private boolean operationIncludeCategory(OperationFilter filter, Operation comparedOperation) {
+		if (filter.getCategory().isBlank() || comparedOperation.getCategory().getName().equals(filter.getCategory())) {
 			return true;
 		}
 		return false;
 	}
 
-	private boolean operationIncludeCashAccount(Operation filter, Operation comparedOperation) {
-		if (filter.getCashAccount()==null||filter.getCashAccount().getName()==null||comparedOperation.getCashAccount().getName().equals(filter.getCashAccount().getName())) {
+	private boolean operationIncludeCashAccount(OperationFilter filter, Operation comparedOperation) {
+		if (filter.getAccount().isBlank()||comparedOperation.getCashAccount().getName().equals(filter.getAccount())) {
 			return true;
 		}
 		return false;
 	}
+	
 	
 }

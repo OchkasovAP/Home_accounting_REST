@@ -44,8 +44,7 @@ public class CategoryController extends AbstractHomeAccountingController{
 
 	@GetMapping("/{type}")
 	public ResponseEntity<List<CategoryDTO>> showCategories(@AuthenticationPrincipal UserDetailsImpl userDetails,
-			@PathVariable("type") String typeName) {
-		OperationType type = OperationType.getTypeFromName(typeName);
+			@PathVariable("type") OperationType type) {
 		List<CategoryDTO> categories = service.findAllByUser(userDetails.getUser().getId(), type)
 				.stream()
 				.map(this::convertCategory)
@@ -55,8 +54,7 @@ public class CategoryController extends AbstractHomeAccountingController{
 
 	@GetMapping("/{type}/{id}")
 	public ResponseEntity<CategoryDTO> showCategoryInfo(@PathVariable("id") int id,
-			@PathVariable("type") String typeName, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-		OperationType type = OperationType.getTypeFromName(typeName);
+			@PathVariable("type") OperationType type, @AuthenticationPrincipal UserDetailsImpl userDetails) {
 		try {
 			CategoryDTO category = convertCategory(service.findById(userDetails.getUser().getId(), id, type.getCategoryClass()));
 			return new ResponseEntity<CategoryDTO>(category, HttpStatus.OK);
@@ -66,9 +64,9 @@ public class CategoryController extends AbstractHomeAccountingController{
 	}
 
 	@PostMapping("/{type}")
-	public ResponseEntity<Void> addNewCategory(@AuthenticationPrincipal UserDetailsImpl userDetails,@PathVariable("type") String typeName,
+	public ResponseEntity<Void> addNewCategory(@AuthenticationPrincipal UserDetailsImpl userDetails,@PathVariable("type") OperationType type,
 			@RequestBody @Valid CategoryDTO categoryDTO, BindingResult bindingResult) {
-		Category category = convertDTO(categoryDTO, typeName);
+		Category category = convertDTO(categoryDTO, type);
 		category.setUser(userDetails.getUser());
 		validator.validate(category, bindingResult);
 		if(bindingResult.hasErrors()) {
@@ -79,8 +77,9 @@ public class CategoryController extends AbstractHomeAccountingController{
 	}
 
 	@PatchMapping("/{type}")
-	public ResponseEntity<Void> editCategory(@RequestBody @Valid CategoryDTO categoryDTO, BindingResult bindingResult, @PathVariable("type") String typeName, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-		Category category = convertDTO(categoryDTO, typeName);
+	public ResponseEntity<Void> editCategory(@RequestBody @Valid CategoryDTO categoryDTO, BindingResult bindingResult,
+			@PathVariable("type") OperationType type, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+		Category category = convertDTO(categoryDTO, type);
 		category.setUser(userDetails.getUser());
 		validator.validate(category, bindingResult);
 		if(bindingResult.hasErrors()) {
@@ -91,9 +90,8 @@ public class CategoryController extends AbstractHomeAccountingController{
 	}
 
 	@DeleteMapping("/{type}/{id}")
-	public ResponseEntity<Void> deleteCategory(@PathVariable("id") int categoryID, @PathVariable("type") String typeName,
+	public ResponseEntity<Void> deleteCategory(@PathVariable("id") int categoryID, @PathVariable("type") OperationType type,
 			@AuthenticationPrincipal UserDetailsImpl userDetails) {
-		OperationType type = OperationType.getTypeFromName(typeName);
 		service.remove(userDetails.getUser().getId(), categoryID, type);
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
@@ -102,8 +100,8 @@ public class CategoryController extends AbstractHomeAccountingController{
 		return modelMapper.map(category, CategoryDTO.class);
 	}
 
-	private Category convertDTO(CategoryDTO categoryDTO, String typeName) {
-		Class<Category> categoryClass = OperationType.getTypeFromName(typeName).getCategoryClass();
+	private Category convertDTO(CategoryDTO categoryDTO, OperationType type) {
+		Class<Category> categoryClass = type.getCategoryClass();
 		return modelMapper.map(categoryDTO, categoryClass);
 	}
 }

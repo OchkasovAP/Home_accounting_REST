@@ -12,14 +12,6 @@ import ru.ochkasovap.homeAccountingRest.models.OutcomeCategory;
 import static ru.ochkasovap.homeAccountingRest.util.OperationType.*;
 
 class OperationTypeTest {
-
-	@Test
-	void getTypeFromName() {
-		for(String typeName:new String[] {"outcome","fmdjskgnfsjk",null}) {
-			assertEquals(OUTCOME, OperationType.getTypeFromName(typeName));
-		}
-		assertEquals(INCOME, OperationType.getTypeFromName("income"));
-	}
 	
 	@Test
 	void newEmptyOperation() {

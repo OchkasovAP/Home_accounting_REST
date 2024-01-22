@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,11 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import ru.ochkasovap.homeAccountingRest.dto.OperationDTO;
-import ru.ochkasovap.homeAccountingRest.dto.OperationFilter;
+import ru.ochkasovap.homeAccountingRest.dto.OperationFilterDTO;
 import ru.ochkasovap.homeAccountingRest.models.CashAccount;
+import ru.ochkasovap.homeAccountingRest.models.User;
 import ru.ochkasovap.homeAccountingRest.security.UserDetailsImpl;
 import ru.ochkasovap.homeAccountingRest.services.OperationsService;
 import ru.ochkasovap.homeAccountingRest.util.Operation;
+import ru.ochkasovap.homeAccountingRest.util.OperationFilter;
 import ru.ochkasovap.homeAccountingRest.util.OperationType;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.HomeAccountingException;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.OperationNotValidException;
@@ -48,21 +49,16 @@ public class OperationsController extends AbstractHomeAccountingController{
 	}
 
 	@GetMapping("/{type}")
-	public List<OperationDTO> showOperationsList(@PathVariable("type") String typeName, @RequestBody OperationFilter filter, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-		Operation filterInstance = OperationType.OUTCOME.newEmptyOperation();
-		if(filter.getFilter()!=null) {
-			filterInstance = convertDTO(filter.getFilter(), typeName);
-		}
-		filterInstance.setUser(userDetails.getUser());
-		return operationsService.findAll(filterInstance, filter.getDateRange())
+	public List<OperationDTO> showOperationsList(@PathVariable("type") OperationType type, @RequestBody OperationFilterDTO filter,
+			@AuthenticationPrincipal UserDetailsImpl userDetails) {
+		return operationsService.findAll(convertFilterDTO(filter, type), userDetails.getUser().getId())
 				.stream()
 				.map(this::convertOperation)
 				.toList();
 	}
 	
 	@GetMapping("/{type}/{id}")
-	public OperationDTO showOperation(@PathVariable("type") String typeName, @PathVariable("id") int operationID, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-		OperationType type = OperationType.getTypeFromName(typeName);
+	public OperationDTO showOperation(@PathVariable("type") OperationType type, @PathVariable("id") int operationID, @AuthenticationPrincipal UserDetailsImpl userDetails) {
 		try {
 			Operation operation = operationsService.findById(userDetails.getUser().getId(), operationID, type.getOperationClass());
 			return convertOperation(operation);
@@ -72,24 +68,29 @@ public class OperationsController extends AbstractHomeAccountingController{
 	}
 	
 	@PostMapping("/{type}")
-	public ResponseEntity<Void> createOperation(@PathVariable("type") String typeName, @RequestBody @Valid OperationDTO operationDTO,
+	public ResponseEntity<Void> createOperation(@PathVariable("type") OperationType type, @RequestBody @Valid OperationDTO operationDTO,
 			BindingResult bindingResult, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-		validator.validate(operationDTO, bindingResult);
+		Operation operation = convertDTO(operationDTO, type);
+		operation.setUser(userDetails.getUser());
+		validator.validate(operation, bindingResult);
 		if(bindingResult.hasErrors()) {
 			throw new OperationNotValidException(bindingResult);
 		}
-		operationsService.create(convertDTO(operationDTO, typeName), userDetails.getUser().getId());
+		operationsService.create(operation, userDetails.getUser().getId());
 		return new ResponseEntity<>(HttpStatus.CREATED);
 	}
 
 	@PatchMapping("/{type}")
 	public ResponseEntity<Void> editOperation(@RequestBody @Valid OperationDTO operationDTO, BindingResult bindingResult,
-			 @PathVariable("type") String typeName, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-		validator.validate(operationDTO, bindingResult);
+			 @PathVariable("type") OperationType type, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+		Operation operation = convertDTO(operationDTO, type);
+		User user = userDetails.getUser();
+		operationsService.checkUsersRights(operation, user.getId());
+		operation.setUser(user);
+		validator.validate(operation, bindingResult);
 		if(bindingResult.hasErrors()) {
 			throw new OperationNotValidException(bindingResult);
 		}
-		Operation operation = convertDTO(operationDTO, typeName);
 		operation.setUser(userDetails.getUser());
 		operationsService.edit(operation);
 		return new ResponseEntity<>(HttpStatus.OK);
@@ -97,9 +98,9 @@ public class OperationsController extends AbstractHomeAccountingController{
 
 	@DeleteMapping("/{type}/{id}")
 	public ResponseEntity<Void> deleteOperation(@PathVariable("id") int operationID,
-			@PathVariable("type") String typeName, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+			@PathVariable("type") OperationType type, @AuthenticationPrincipal UserDetailsImpl userDetails) {
 		int userId = userDetails.getUser().getId();
-		Class<Operation> operationClass = OperationType.getTypeFromName(typeName).getOperationClass();
+		Class<Operation> operationClass = type.getOperationClass();
 		operationsService.delete(userId, operationID, operationClass);
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
@@ -110,12 +111,17 @@ public class OperationsController extends AbstractHomeAccountingController{
 		operationDTO.setCategory(operation.getCategory().getName());
 		return operationDTO;
 	}
-	private Operation convertDTO(OperationDTO operationDTO, String typeName) {
-		OperationType type = OperationType.getTypeFromName(typeName);
+	private Operation convertDTO(OperationDTO operationDTO, OperationType type) {
 		Class<Operation> operClass = type.getOperationClass();
 		Operation operation = modelMapper.map(operationDTO, operClass);
 		operation.setCashAccount(new CashAccount.Builder().name(operationDTO.getAccount()).build());
 		operation.setCategory(type.newCategory(operationDTO.getCategory()));
 		return operation;
 	}
+	private OperationFilter convertFilterDTO(OperationFilterDTO filterDTO, OperationType type) {
+		OperationFilter filter = modelMapper.map(filterDTO, OperationFilter.class);
+		filter.setType(type);
+		return filter;
+	}
+	
 }

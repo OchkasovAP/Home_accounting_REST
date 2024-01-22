@@ -32,6 +32,10 @@ class UserServiceTest {
 	private UserRepository userRepository;
 	@Mock
 	private RoleRepository roleRepository;
+	@Mock
+	private CategoriesService categoriesService;
+	@Mock
+	private CashAccountsService accountsService;
 	private PasswordEncoder encoder;
 
 	private List<User> users;
@@ -41,7 +45,7 @@ class UserServiceTest {
 	@BeforeEach
 	void setUpEach() {
 		encoder = new BCryptPasswordEncoder();
-		service = new UserService(userRepository, roleRepository, encoder);
+		service = new UserService(userRepository, roleRepository, encoder, categoriesService, accountsService);
 		roles = new HashMap<>(Map.of("ADMIN", new Role(0, "ADMIN"), "USER", new Role(1, "USER")));
 		users = new ArrayList<>(List.of(
 			new User.Builder()

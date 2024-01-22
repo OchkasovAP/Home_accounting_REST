@@ -20,10 +20,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.minidev.json.JSONArray;
 import net.minidev.json.parser.JSONParser;
 import ru.ochkasovap.homeAccountingRest.dto.OperationDTO;
+import ru.ochkasovap.homeAccountingRest.util.ExceptionMessageBuilder;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -75,8 +78,8 @@ class OperationsControllerTest {
 	@WithUserDetails("user")
 	void showOperationsList() throws Exception {
 		String requestBody = objectMapper.writeValueAsString(List.of(
-				Map.of("id",2,"amount",100.0, "account", "TestAccount1", "category", "TestCategory1","comment","TestComment","date",new GregorianCalendar(2023, 0, 1).getTime()),
-				Map.of("id",1,"amount",100.0, "account", "TestAccount1", "category", "TestCategory1","comment","TestComment","date",new GregorianCalendar(2023, 0, 2).getTime())
+				Map.of("id",2,"amount",100.0, "account", "TestAccount1", "category", "TestCategory1","comment","TestComment","date","2022-12-31"),
+				Map.of("id",1,"amount",100.0, "account", "TestAccount1", "category", "TestCategory1","comment","TestComment","date","2023-01-01")
 				));
 		JSONArray jsonArray = new JSONParser(JSONParser.DEFAULT_PERMISSIVE_MODE).parse(requestBody, JSONArray.class);
 		for(String type:types) {
@@ -107,7 +110,7 @@ class OperationsControllerTest {
 			.andExpect(jsonPath("$.account").value("TestAccount1"))
 			.andExpect(jsonPath("$.category").value("TestCategory1"))
 			.andExpect(jsonPath("$.comment", Matchers.is("TestComment")))
-			.andExpect(jsonPath("$.date", Matchers.is("2023-01-01T19:00:00.000+00:00")));
+			.andExpect(jsonPath("$.date", Matchers.is("2023-01-01")));
 		}
 	}
 	
@@ -164,7 +167,7 @@ class OperationsControllerTest {
 		.andExpect(jsonPath("$.account").value("TestAccount1"))
 		.andExpect(jsonPath("$.category").value("TestCategory1"))
 		.andExpect(jsonPath("$.comment", Matchers.is("Comment")))
-		.andExpect(jsonPath("$.date", Matchers.is("2023-01-01T19:00:00.000+00:00")));
+		.andExpect(jsonPath("$.date", Matchers.is("2023-01-01")));
 		
 		mockMvc.perform(get("/cashAccounts/{id}", 1))
 		.andExpect(jsonPath("$.balance").value(expectedAmount));
@@ -174,21 +177,39 @@ class OperationsControllerTest {
 	@WithUserDetails("user")
 	void createOperation_FailValid() throws Exception{
 		createdOperation.setComment("Very very very very very very very very very very long comment");
-		for(String type:List.of("income", "outcome")) {
-			createOperation_FailValid(type,"comment","Комментарий не должен превышать 50 символов");
+		for(String type:types) {
+			createOperation_FailValid(type,Map.of("comment","Комментарий не должен превышать 50 символов"));
 		}
 		createdOperation.setComment("");
-		createdOperation.setDate(new Date(System.currentTimeMillis()+1000));
-		for(String type:List.of("income", "outcome")) {
-			createOperation_FailValid(type,"date","Дата не может быть позже текущей");
+		createdOperation.setDate(new Date(System.currentTimeMillis()+1000*60*60*24));
+		for(String type:types) {
+			createOperation_FailValid(type, Map.of("date","Дата не может быть позже текущей"));
 		}
 	}
-	void createOperation_FailValid(String type, String field, String exceptionMessage) throws Exception{
+	@Test
+	@WithUserDetails("user")
+	void createOperation_NullFieldsValid() throws Exception {
+		String emptyFieldMessage = "Поле не должно быть пустым";
+		for(String type:types) {
+			for(String field: new String[] {"account","date","category","amount"}) {
+				setNull(field);
+				createOperation_FailValid(type, Map.of(field, emptyFieldMessage));
+				setUp();
+			}
+		}
+	}
+	private void setNull(String field) throws Exception {
+		 StringBuilder name = new StringBuilder("set").append(field.substring(0,1).toUpperCase()).append(field.substring(1));
+		 Class<OperationDTO> operationClass = OperationDTO.class;
+		 Class<?> parameterType = OperationDTO.class.getDeclaredField(field).getType();
+		 operationClass.getDeclaredMethod(name.toString(), parameterType).invoke(createdOperation,new Object[] { null });
+	}
+	void createOperation_FailValid(String type, Map<String, String> fieldsErrors) throws Exception{
 		mockMvc.perform(post("/operations/{type}", type)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createdOperation)))
 		.andExpect(status().isBadRequest())
-		.andExpect(jsonPath("$.Exception").value("Field - "+field+", error - "+exceptionMessage+";"));
+		.andExpect(jsonPath("$.Exception").value(ExceptionMessageBuilder.build(fieldsErrors)));
 	}
 	
 	@Test
@@ -221,7 +242,7 @@ class OperationsControllerTest {
 		.andExpect(jsonPath("$.account").value(editedOperation.getAccount()))
 		.andExpect(jsonPath("$.category").value(editedOperation.getCategory()))
 		.andExpect(jsonPath("$.comment", Matchers.is(editedOperation.getComment())))
-		.andExpect(jsonPath("$.date", Matchers.is("2023-01-02T19:00:00.000+00:00")));
+		.andExpect(jsonPath("$.date", Matchers.is("2023-01-02")));
 		
 		mockMvc.perform(get("/cashAccounts/{id}", 1))
 		.andExpect(jsonPath("$.balance").value(jsonExpected.get("Account1Balance")));

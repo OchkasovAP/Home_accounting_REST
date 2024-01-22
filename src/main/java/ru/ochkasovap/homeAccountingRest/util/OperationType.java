@@ -10,17 +10,6 @@ import ru.ochkasovap.homeAccountingRest.models.OutcomeCategory;
 public enum OperationType {
 	INCOME(Income.class, IncomeCategory.class), OUTCOME(Outcome.class, OutcomeCategory.class);
 
-	public static OperationType getTypeFromName(String typeName) {
-		if (typeName != null) {
-			for (OperationType type : OperationType.values()) {
-				if (typeName.toUpperCase().equals(type.name())) {
-					return type;
-				}
-			}
-		}
-		return OperationType.OUTCOME;
-	}
-
 	private final Class<? extends Operation> operationClass;
 	private final Class<? extends Category> categoryClass;
 

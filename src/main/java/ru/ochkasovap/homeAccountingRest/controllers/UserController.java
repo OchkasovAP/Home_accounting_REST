@@ -1,7 +1,8 @@
 package ru.ochkasovap.homeAccountingRest.controllers;
 
 import jakarta.validation.Valid;
-import ru.ochkasovap.homeAccountingRest.dto.AuthenticationDTO;
+import ru.ochkasovap.homeAccountingRest.dto.EditUserDTO;
+import ru.ochkasovap.homeAccountingRest.dto.RegistrationDTO;
 import ru.ochkasovap.homeAccountingRest.dto.UserDTO;
 import ru.ochkasovap.homeAccountingRest.models.Role;
 import ru.ochkasovap.homeAccountingRest.models.User;
@@ -12,12 +13,14 @@ import ru.ochkasovap.homeAccountingRest.util.exceptions.ForbiddenUsersActionExce
 import ru.ochkasovap.homeAccountingRest.util.exceptions.HomeAccountingException;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.UserCannotBeRemovedException;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.UserNotValidException;
-import ru.ochkasovap.homeAccountingRest.util.validators.UserValidator;
-import ru.ochkasovap.homeAccountingRest.util.validators.UserValidator;
+import ru.ochkasovap.homeAccountingRest.util.validators.UserCreationValidator;
+import ru.ochkasovap.homeAccountingRest.util.validators.UserEditionValidator;
+import ru.ochkasovap.homeAccountingRest.util.validators.UserEditionValidator;
 
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Stream;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,17 +49,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController extends AbstractHomeAccountingController {
 
 	private final UserService userService;
-	private final UserValidator userValidator;
+	private final UserEditionValidator editionValidator;
+	private final UserCreationValidator creationValidator;
 	private final ModelMapper modelMapper;
 	private final JWTUtil jwtUtil;
 	private final AuthenticationManager authenticationManager;
 
 	@Autowired
-	public UserController(UserService userService, UserValidator userValidator, ModelMapper modelMapper,
-			JWTUtil jwtUtil, AuthenticationManager authenticationManager) {
+	public UserController(UserService userService, UserEditionValidator userEditionValidator, ModelMapper modelMapper,
+			JWTUtil jwtUtil, AuthenticationManager authenticationManager, UserCreationValidator creationValidator) {
 		super();
 		this.userService = userService;
-		this.userValidator = userValidator;
+		this.editionValidator = userEditionValidator;
+		this.creationValidator = creationValidator;
 		this.modelMapper = modelMapper;
 		this.jwtUtil = jwtUtil;
 		this.authenticationManager = authenticationManager;
@@ -72,7 +77,7 @@ public class UserController extends AbstractHomeAccountingController {
 			@AuthenticationPrincipal UserDetailsImpl userDetails) {
 		if (userDetails.getUser().isAdmin() || userDetails.getUser().getId() == id) {
 			try {
-			return new ResponseEntity<>(convertUser(userService.findById(id)), HttpStatus.OK);
+				return new ResponseEntity<>(convertUser(userService.findById(id)), HttpStatus.OK);
 			} catch (NoSuchElementException ex) {
 				throw new HomeAccountingException("Пользователь с таким id не существует");
 			}
@@ -81,7 +86,7 @@ public class UserController extends AbstractHomeAccountingController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<Map<String, String>> autorization(@RequestBody AuthenticationDTO userDTO) {
+	public ResponseEntity<Map<String, String>> autorization(@RequestBody RegistrationDTO userDTO) {
 		UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
 				userDTO.getLogin(), userDTO.getPassword());
 		try {
@@ -95,13 +100,13 @@ public class UserController extends AbstractHomeAccountingController {
 	}
 
 	@PostMapping("/registration")
-	public ResponseEntity<Map<String, String>> create(@RequestBody @Valid AuthenticationDTO userDTO,
+	public ResponseEntity<Map<String, String>> create(@RequestBody @Valid RegistrationDTO userDTO,
 			BindingResult bindingResult) {
-		userValidator.validate(userDTO, bindingResult);
+		creationValidator.validate(userDTO, bindingResult);
 		if (bindingResult.hasErrors()) {
 			throw new UserNotValidException(bindingResult);
 		}
-		User user = convertDTO(userDTO);
+		User user = convertRegistrationDTO(userDTO);
 		userService.create(user);
 		String token = jwtUtil.generateToken(user.getLogin());
 		return new ResponseEntity<>(Map.of("jwt_token", token), HttpStatus.CREATED);
@@ -109,17 +114,17 @@ public class UserController extends AbstractHomeAccountingController {
 
 	@PatchMapping()
 	public ResponseEntity<Void> edit(@AuthenticationPrincipal UserDetailsImpl userDetails,
-			@RequestBody @Valid AuthenticationDTO userDTO, BindingResult bindingResult) {
+			@RequestBody @Valid EditUserDTO userDTO, BindingResult bindingResult) {
 		User currentUser = userDetails.getUser();
 		if (currentUser.isAdmin() || userDetails.getUser().getId() == userDTO.getId()) {
-			userValidator.validate(userDTO, bindingResult);
-			if (bindingResult.hasErrors()) {
+			editionValidator.validate(userDTO, bindingResult);
+			if (hasEditErrors(userDTO, bindingResult)) {
 				throw new UserNotValidException(bindingResult);
 			}
 			if(currentUser.getId()==userDTO.getId()) {
 				userDTO.setRole(currentUser.getRole().getName());
 			}
-			User user = convertDTO(userDTO);
+			User user = convertEditDTO(userDTO);
 			if (userDTO.getNewPassword() != null) {
 				user.setPassword(userDTO.getNewPassword());
 			}
@@ -143,8 +148,17 @@ public class UserController extends AbstractHomeAccountingController {
 		userService.delete(id);
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
+	
+	private boolean hasEditErrors(EditUserDTO authDTO, BindingResult bindingResult) {
+		return bindingResult.hasErrors()&&(bindingResult.getFieldErrors().stream().anyMatch(t -> t.getField().equals("login"))
+				||(Stream.of(authDTO.getNewPassword(),authDTO.getPassword(), authDTO.getRepeatedNewPassword()).anyMatch(t -> t!=null&&!t.isBlank())));
+	}
 
-	private User convertDTO(AuthenticationDTO userDTO) {
+	private User convertRegistrationDTO(RegistrationDTO userDTO) {
+		User user = modelMapper.map(userDTO, User.class);
+		return user;
+	}
+	private User convertEditDTO(EditUserDTO userDTO) {
 		User user = modelMapper.map(userDTO, User.class);
 		user.setRole(new Role(0, userDTO.getRole()));
 		return user;

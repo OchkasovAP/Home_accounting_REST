@@ -5,20 +5,29 @@ import java.util.Date;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import ru.ochkasovap.homeAccountingRest.util.DateUtil;
 import ru.ochkasovap.homeAccountingRest.util.Operation;
 
 public class OperationDTO {
 	private int id;
+	@NotNull(message = "Поле не должно быть пустым")
 	private String account;
+	@NotNull(message = "Поле не должно быть пустым")
 	private String category;
+	 @JsonFormat
+     (shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@NotNull(message = "Поле не должно быть пустым")
 	private Date date;
 	@Size(max=50, message = "Комментарий не должен превышать 50 символов")
 	private String comment;
+	@NotNull(message = "Поле не должно быть пустым")
 	private BigDecimal amount;
 	
 	public OperationDTO() {

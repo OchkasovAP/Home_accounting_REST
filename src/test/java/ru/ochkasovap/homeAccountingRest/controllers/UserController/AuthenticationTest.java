@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
-import ru.ochkasovap.homeAccountingRest.dto.AuthenticationDTO;
+import ru.ochkasovap.homeAccountingRest.dto.RegistrationDTO;
 
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -31,39 +31,39 @@ class AuthenticationTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 	
-	private AuthenticationDTO createdUser;
+	private RegistrationDTO createdUser;
 	
 	@BeforeEach
 	void setUp() {
-		createdUser = AuthenticationDTO.builder(0, "Test_User", "Test12345")
+		createdUser = RegistrationDTO.builder("Test_User", "Test12345")
 				.repeatedNewPassword("Test12345")
 				.build();
 	}
 	
 	@Test
 	void login() throws Exception {
-		AuthenticationDTO admin = AuthenticationDTO.builder(1, "admin", "Test12345").build();
+		createdUser.setLogin("admin");
 		mockMvc.perform(post("/users/login")
 		.contentType(MediaType.APPLICATION_JSON)
-		.content(objectMapper.writeValueAsString(admin)))
+		.content(objectMapper.writeValueAsString(createdUser)))
 		.andExpect(status().isOk())
 		.andExpect(jsonPath("$.jwt_token").exists());
 	}
 	@Test
 	void login_NonCorrect() throws Exception {
-		AuthenticationDTO admin = AuthenticationDTO.builder(1, "admin", "user").build();
+		createdUser.setLogin("admin");
+		createdUser.setPassword("password");
 		mockMvc.perform(post("/users/login")
 		.contentType(MediaType.APPLICATION_JSON)
-		.content(objectMapper.writeValueAsString(admin)))
+		.content(objectMapper.writeValueAsString(createdUser)))
 		.andExpect(status().isBadRequest())
 		.andExpect(jsonPath("$.message").value("Некорректный логин или пароль"));
 	}
 	@Test
 	void registration() throws Exception {
-		AuthenticationDTO newUser = AuthenticationDTO.builder(0, "Test_User", "Test12345").repeatedNewPassword("Test12345").build();
 		mockMvc.perform(post("/users/registration")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(newUser)))
+				.content(objectMapper.writeValueAsString(createdUser)))
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.jwt_token").exists());
 	}

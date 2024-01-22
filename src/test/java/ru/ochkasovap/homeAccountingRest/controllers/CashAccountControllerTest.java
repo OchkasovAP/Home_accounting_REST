@@ -142,22 +142,28 @@ class CashAccountControllerTest {
 	@WithUserDetails("user")
 	void addNewCashAccount_FailNameValid() throws Exception {
 		createdAccount.setName("TestAccount1");
-		performPostWithFailValidName("Такой счет уже существует");
+		performPostWithFailValid("name", "Такой счет уже существует");
 		
 		for(String emptyName:new String[] {null,""}) {
 			createdAccount.setName(emptyName);
-			performPostWithFailValidName("Поле не должно быть пустым");
+			performPostWithFailValid("name","Поле не должно быть пустым");
 		}
 		
 		createdAccount.setName("Very very very very large name size");
-		performPostWithFailValidName("Поле не должно превышать 20 символов");
+		performPostWithFailValid("name","Поле не должно превышать 20 символов");
 	}
-	void performPostWithFailValidName(String exceptionMessage) throws Exception{
+	@Test
+	@WithUserDetails("user")
+	void addNewCashAccount_FailBalanceValid() throws Exception {
+		createdAccount.setBalance(null);
+		performPostWithFailValid("balance","Поле не должно быть пустым");
+	}
+	void performPostWithFailValid(String field, String exceptionMessage) throws Exception{
 		mockMvc.perform(post("/cashAccounts")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(createdAccount)))
 		.andExpect(status().isBadRequest())
-		.andExpect(jsonPath("$.Exception").value("Field - name, error - "+exceptionMessage+";"));
+		.andExpect(jsonPath("$.Exception").value("Field - "+field+", error - "+exceptionMessage+";"));
 	}
 	
 	@Test

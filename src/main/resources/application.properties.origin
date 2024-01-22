@@ -9,3 +9,5 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 spring.mvc.hiddenmethod.filter.enabled=true
 
 jwt_secret=
+default_Income_Categories=Зарплата;Проценты по вкладу;Подарок;Другое
+default_Outcome_Categories=Здоровье;Дом;Одежда;Продукты;Транспорт;Развлечения;Кафе;Семья;Другое

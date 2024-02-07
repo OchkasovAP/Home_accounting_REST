@@ -10,12 +10,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
-public class User {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
-	private int id;
+public class User extends AbstractModel{
 	
 	@Column(name = "login")
 	@NotNull(message = "Поле не должно быть пустым")
@@ -95,14 +90,6 @@ public class User {
 			user.setRole(role);
 			return this;
 		}
-	}
-	
-	public int getId() {
-		return this.id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
 	}
 
 	public String getLogin() {

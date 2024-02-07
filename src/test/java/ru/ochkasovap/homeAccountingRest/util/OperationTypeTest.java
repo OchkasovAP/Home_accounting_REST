@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import ru.ochkasovap.homeAccountingRest.models.Category;
 import ru.ochkasovap.homeAccountingRest.models.Income;
 import ru.ochkasovap.homeAccountingRest.models.IncomeCategory;
 import ru.ochkasovap.homeAccountingRest.models.Outcome;

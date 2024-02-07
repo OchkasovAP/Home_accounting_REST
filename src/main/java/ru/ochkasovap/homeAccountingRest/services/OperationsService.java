@@ -1,9 +1,7 @@
 package ru.ochkasovap.homeAccountingRest.services;
 
 import java.math.BigDecimal;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,17 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
-import ru.ochkasovap.homeAccountingRest.dto.OperationDTO;
 import ru.ochkasovap.homeAccountingRest.models.CashAccount;
+import ru.ochkasovap.homeAccountingRest.models.Category;
 import ru.ochkasovap.homeAccountingRest.models.Income;
+import ru.ochkasovap.homeAccountingRest.models.Operation;
 import ru.ochkasovap.homeAccountingRest.models.Outcome;
 import ru.ochkasovap.homeAccountingRest.models.User;
-import ru.ochkasovap.homeAccountingRest.repository.CashAccountRepository;
-import ru.ochkasovap.homeAccountingRest.repository.UserRepository;
-import ru.ochkasovap.homeAccountingRest.util.Category;
 import ru.ochkasovap.homeAccountingRest.util.DateRange;
-import ru.ochkasovap.homeAccountingRest.util.DateUtil;
-import ru.ochkasovap.homeAccountingRest.util.Operation;
 import ru.ochkasovap.homeAccountingRest.util.OperationFilter;
 import ru.ochkasovap.homeAccountingRest.util.OperationType;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.ForbiddenUsersActionException;

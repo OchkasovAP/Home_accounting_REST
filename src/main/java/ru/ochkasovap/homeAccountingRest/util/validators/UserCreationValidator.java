@@ -2,7 +2,6 @@ package ru.ochkasovap.homeAccountingRest.util.validators;
 
 import java.util.Optional;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;

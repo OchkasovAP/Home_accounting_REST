@@ -18,11 +18,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import jakarta.persistence.EntityManager;
 import ru.ochkasovap.homeAccountingRest.models.CashAccount;
+import ru.ochkasovap.homeAccountingRest.models.Income;
+import ru.ochkasovap.homeAccountingRest.models.Operation;
 import ru.ochkasovap.homeAccountingRest.models.Outcome;
 import ru.ochkasovap.homeAccountingRest.models.OutcomeCategory;
 import ru.ochkasovap.homeAccountingRest.models.User;
 import ru.ochkasovap.homeAccountingRest.util.DateRange;
-import ru.ochkasovap.homeAccountingRest.util.Operation;
 import ru.ochkasovap.homeAccountingRest.util.OperationFilter;
 import ru.ochkasovap.homeAccountingRest.util.OperationType;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.ForbiddenUsersActionException;
@@ -76,8 +77,8 @@ class OutcomesServiceTest {
 	}
 	void initCategories() {
 		categories.addAll(List.of(
-				new OutcomeCategory.Builder().id(0).name("Category0").build(),
-				new OutcomeCategory.Builder().id(1).name("Category1").build()
+				(OutcomeCategory)OutcomeCategory.builder().id(0).name("Category0").build(),
+				(OutcomeCategory)OutcomeCategory.builder().id(1).name("Category1").build()
 				));
 	}
 	void initUser() {
@@ -90,21 +91,21 @@ class OutcomesServiceTest {
 	}
 	void initOutcomes() {
 		outcomes.addAll(List.of(
-				new Outcome.Builder().id(0).date(new Date()).amount(new BigDecimal(200))
+				(Outcome)Outcome.builder().id(0).date(new Date()).amount(new BigDecimal(200))
 				.cashAccount(accounts.get(0)).category(categories.get(0)).user(user).build(),
-				new Outcome.Builder().id(1).date(new GregorianCalendar(2022,05,05).getTime()).amount(new BigDecimal(200))
+				(Outcome)Outcome.builder().id(1).date(new GregorianCalendar(2022,05,05).getTime()).amount(new BigDecimal(200))
 				.cashAccount(accounts.get(1)).category(categories.get(0)).user(user).build(),
-				new Outcome.Builder().id(2).date(new GregorianCalendar(2023,12,05).getTime()).amount(new BigDecimal(200))
+				(Outcome)Outcome.builder().id(2).date(new GregorianCalendar(2023,12,05).getTime()).amount(new BigDecimal(200))
 				.cashAccount(accounts.get(0)).category(categories.get(1)).user(user).build(),
-				new Outcome.Builder().id(3).date(new GregorianCalendar(2023,12,05).getTime()).amount(new BigDecimal(200))
+				(Outcome)Outcome.builder().id(3).date(new GregorianCalendar(2023,12,05).getTime()).amount(new BigDecimal(200))
 				.cashAccount(accounts.get(0)).category(categories.get(1)).user(user).build()
 				));
-		createdOutcome = new Outcome.Builder()
+		createdOutcome = (Outcome)Outcome.builder()
 				.date(new Date())
 				.amount(new BigDecimal(200))
 				.cashAccount(accounts.get(0))
 				.category(categories.get(0)).build();
-		editOutcome = new Outcome.Builder()
+		editOutcome = (Outcome)Outcome.builder()
 				.id(0)
 				.date(new GregorianCalendar(2023,12,05).getTime())
 				.amount(new BigDecimal(400))

@@ -1,6 +1,5 @@
 package ru.ochkasovap.homeAccountingRest.dto;
 
-import jakarta.validation.constraints.Size;
 
 public class UserDTO {
 	

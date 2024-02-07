@@ -8,7 +8,6 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
 import ru.ochkasovap.homeAccountingRest.models.CashAccount;
-import ru.ochkasovap.homeAccountingRest.models.User;
 import ru.ochkasovap.homeAccountingRest.services.CashAccountsService;
 
 @Component

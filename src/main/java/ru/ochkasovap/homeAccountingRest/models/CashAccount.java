@@ -8,11 +8,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "cash_account")
-public class CashAccount {
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int id;
+public class CashAccount extends AbstractModel{
 	
 	@NotNull
 	private BigDecimal balance;
@@ -62,14 +58,6 @@ public class CashAccount {
 			cashAccount.setUser(user);
 			return this;
 		}
-	}
-
-	public Integer getId() {
-		return this.id;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
 	}
 
 	public User getUser() {

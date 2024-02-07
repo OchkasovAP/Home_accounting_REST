@@ -4,12 +4,10 @@ package ru.ochkasovap.homeAccountingRest.services;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,11 +17,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import ru.ochkasovap.homeAccountingRest.models.Category;
 import ru.ochkasovap.homeAccountingRest.models.IncomeCategory;
 import ru.ochkasovap.homeAccountingRest.models.OutcomeCategory;
 import ru.ochkasovap.homeAccountingRest.models.User;
 import ru.ochkasovap.homeAccountingRest.repository.UserRepository;
-import ru.ochkasovap.homeAccountingRest.util.Category;
 import ru.ochkasovap.homeAccountingRest.util.OperationType;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.ForbiddenUsersActionException;
 

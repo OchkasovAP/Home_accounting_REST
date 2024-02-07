@@ -2,18 +2,10 @@ package ru.ochkasovap.homeAccountingRest.dto;
 
 import java.math.BigDecimal;
 import java.util.Date;
-
-import org.springframework.format.annotation.DateTimeFormat;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
-
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import ru.ochkasovap.homeAccountingRest.util.DateUtil;
-import ru.ochkasovap.homeAccountingRest.util.Operation;
+
 
 public class OperationDTO {
 	private int id;

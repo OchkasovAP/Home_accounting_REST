@@ -18,11 +18,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.persistence.EntityManager;
+import ru.ochkasovap.homeAccountingRest.models.Category;
 import ru.ochkasovap.homeAccountingRest.models.IncomeCategory;
 import ru.ochkasovap.homeAccountingRest.models.OutcomeCategory;
 import ru.ochkasovap.homeAccountingRest.models.User;
 import ru.ochkasovap.homeAccountingRest.repository.UserRepository;
-import ru.ochkasovap.homeAccountingRest.util.Category;
 import ru.ochkasovap.homeAccountingRest.util.OperationType;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.ForbiddenUsersActionException;
 
@@ -44,14 +44,14 @@ class CategoriesServiceTest {
 		incomeList = new ArrayList<>();
 		user = new User.Builder().id(0).incomeCategories(incomeList).outcomeCategories(outcomeList).build();
 		incomeList.addAll(List.of(
-				new IncomeCategory.Builder().id(2).name("IncomeCategory2").user(user).build(),
-				new IncomeCategory.Builder().id(1).name("IncomeCategory1").user(user).build(),
-				new IncomeCategory.Builder().id(0).name("IncomeCategory0").user(user).build()
+				(IncomeCategory)IncomeCategory.builder().id(2).name("IncomeCategory2").user(user).build(),
+				(IncomeCategory)IncomeCategory.builder().id(1).name("IncomeCategory1").user(user).build(),
+				(IncomeCategory)IncomeCategory.builder().id(0).name("IncomeCategory0").user(user).build()
 				));
 		outcomeList.addAll(List.of(
-				new OutcomeCategory.Builder().id(2).name("OutcomeCategory2").user(user).build(),
-				new OutcomeCategory.Builder().id(1).name("OutcomeCategory1").user(user).build(),
-				new OutcomeCategory.Builder().id(0).name("OutcomeCategory0").user(user).build()
+				(OutcomeCategory)OutcomeCategory.builder().id(2).name("OutcomeCategory2").user(user).build(),
+				(OutcomeCategory)OutcomeCategory.builder().id(1).name("OutcomeCategory1").user(user).build(),
+				(OutcomeCategory)OutcomeCategory.builder().id(0).name("OutcomeCategory0").user(user).build()
 				));
 	}
 	@Test
@@ -81,7 +81,7 @@ class CategoriesServiceTest {
 	@Test
 	void create_CorrectArgs_OutcomeCategory() {
 		when(userRepository.findById(0)).thenReturn(Optional.of(user));
-		OutcomeCategory outcome = new OutcomeCategory.Builder().id(3).name("New Outcome").build();
+		Category outcome = OutcomeCategory.builder().id(3).name("New Outcome").build();
 		service.create(0, outcome);
 		assertTrue(user.getOutcomeCategories().contains(outcome));
 		assertTrue(outcome.getUser().equals(user));
@@ -89,7 +89,7 @@ class CategoriesServiceTest {
 	@Test
 	void create_CorrectArgs_IncomeCategory() {
 		when(userRepository.findById(0)).thenReturn(Optional.of(user));
-		IncomeCategory income = new IncomeCategory.Builder().id(3).name("NewIncome").build();
+		Category income = IncomeCategory.builder().id(3).name("NewIncome").build();
 		service.create(0, income);
 		assertTrue(user.getIncomeCategories().contains(income));
 		assertTrue(income.getUser().equals(user));
@@ -97,13 +97,13 @@ class CategoriesServiceTest {
 	@Test
 	void create_NullUser_OutcomeCategory() {
 		when(userRepository.findById(0)).thenThrow(NoSuchElementException.class);
-		OutcomeCategory outcome = new OutcomeCategory.Builder().id(3).name("New Outcome").build();
+		Category outcome = OutcomeCategory.builder().id(3).name("New Outcome").build();
 		assertThrows(NoSuchElementException.class, () -> service.create(0, outcome));
 	}
 	@Test
 	void create_NullUser_IncomeCategory() {
 		when(userRepository.findById(0)).thenThrow(NoSuchElementException.class);
-		IncomeCategory income = new IncomeCategory.Builder().id(3).name("New Income").build();
+		Category income = IncomeCategory.builder().id(3).name("New Income").build();
 		assertThrows(NoSuchElementException.class, () -> service.create(0, income));
 	}
 
@@ -131,7 +131,7 @@ class CategoriesServiceTest {
 	}
 	@Test
 	void edit_Correct() {
-		Category category = new IncomeCategory.Builder().id(0).name("EditCategoryName").user(user).build();
+		Category category = IncomeCategory.builder().id(0).name("EditCategoryName").user(user).build();
 		IncomeCategory categoryFromDB = incomeList.get(0);
 		when(entityManager.find(IncomeCategory.class, 0)).thenReturn(categoryFromDB);
 		service.edit(category);
@@ -139,7 +139,7 @@ class CategoriesServiceTest {
 	}
 	@Test
 	void edit_User_WithoutRights() {
-		Category category = new IncomeCategory.Builder().id(0).name("EditCategoryName").user(new User.Builder().id(3).build()).build();
+		Category category = IncomeCategory.builder().id(0).name("EditCategoryName").user(new User.Builder().id(3).build()).build();
 		IncomeCategory categoryFromDB = incomeList.get(0);
 		when(entityManager.find(IncomeCategory.class, 0)).thenReturn(categoryFromDB);
 		assertThrows(ForbiddenUsersActionException.class, () -> service.edit(category));

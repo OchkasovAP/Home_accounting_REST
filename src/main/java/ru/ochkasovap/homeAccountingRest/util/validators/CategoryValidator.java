@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import ru.ochkasovap.homeAccountingRest.models.Category;
 import ru.ochkasovap.homeAccountingRest.models.IncomeCategory;
 import ru.ochkasovap.homeAccountingRest.models.OutcomeCategory;
 import ru.ochkasovap.homeAccountingRest.services.CategoriesService;
-import ru.ochkasovap.homeAccountingRest.util.Category;
 
 @Component
 public class CategoryValidator implements Validator{

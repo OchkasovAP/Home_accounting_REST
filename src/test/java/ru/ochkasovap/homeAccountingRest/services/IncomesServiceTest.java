@@ -21,9 +21,9 @@ import jakarta.persistence.EntityManager;
 import ru.ochkasovap.homeAccountingRest.models.CashAccount;
 import ru.ochkasovap.homeAccountingRest.models.Income;
 import ru.ochkasovap.homeAccountingRest.models.IncomeCategory;
+import ru.ochkasovap.homeAccountingRest.models.Operation;
 import ru.ochkasovap.homeAccountingRest.models.User;
 import ru.ochkasovap.homeAccountingRest.util.DateRange;
-import ru.ochkasovap.homeAccountingRest.util.Operation;
 import ru.ochkasovap.homeAccountingRest.util.OperationFilter;
 import ru.ochkasovap.homeAccountingRest.util.OperationType;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.ForbiddenUsersActionException;
@@ -76,8 +76,8 @@ class IncomesServiceTest {
 	}
 	void initCategories() {
 		categories.addAll(List.of(
-				new IncomeCategory.Builder().id(0).name("Category0").build(),
-				new IncomeCategory.Builder().id(1).name("Category1").build()
+				(IncomeCategory)IncomeCategory.builder().id(0).name("Category0").build(),
+				(IncomeCategory)IncomeCategory.builder().id(1).name("Category1").build()
 				));
 	}
 	void initUser() {
@@ -90,21 +90,21 @@ class IncomesServiceTest {
 	}
 	void initIncomes() {
 		incomes.addAll(List.of(
-				new Income.Builder().id(0).date(new Date()).amount(new BigDecimal(200))
+				(Income)Income.builder().id(0).date(new Date()).amount(new BigDecimal(200))
 				.cashAccount(accounts.get(0)).category(categories.get(0)).user(user).build(),
-				new Income.Builder().id(1).date(new GregorianCalendar(2022,05,05).getTime()).amount(new BigDecimal(200))
+				(Income)Income.builder().id(1).date(new GregorianCalendar(2022,05,05).getTime()).amount(new BigDecimal(200))
 				.cashAccount(accounts.get(1)).category(categories.get(0)).user(user).build(),
-				new Income.Builder().id(2).date(new GregorianCalendar(2023,12,05).getTime()).amount(new BigDecimal(200))
+				(Income)Income.builder().id(2).date(new GregorianCalendar(2023,12,05).getTime()).amount(new BigDecimal(200))
 				.cashAccount(accounts.get(0)).category(categories.get(1)).user(user).build(),
-				new Income.Builder().id(3).date(new GregorianCalendar(2023,12,05).getTime()).amount(new BigDecimal(200))
+				(Income)Income.builder().id(3).date(new GregorianCalendar(2023,12,05).getTime()).amount(new BigDecimal(200))
 				.cashAccount(accounts.get(0)).category(categories.get(1)).user(user).build()
 				));
-		createdIncome = new Income.Builder()
+		createdIncome = (Income)Income.builder()
 				.date(new Date())
 				.amount(new BigDecimal(200))
 				.cashAccount(accounts.get(0))
 				.category(categories.get(0)).build();
-		editIncome = new Income.Builder()
+		editIncome = (Income)Income.builder()
 				.id(0)
 				.date(new GregorianCalendar(2023,12,05).getTime())
 				.amount(new BigDecimal(400))

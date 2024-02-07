@@ -6,12 +6,10 @@ import java.util.List;
 
 @Entity
 @Table(name="roles")
-public class Role {
+public class Role extends AbstractModel {
 	public static final String ADMIN = "ADMIN";
 	public static final String USER = "USER";
 	
-	@Id
-	private int id;
 	private String name;
 
 	@OneToMany(mappedBy="role")
@@ -20,18 +18,10 @@ public class Role {
 	public Role() {
 	}
 	
-	public Role(Integer id, String name) {
+	public Role(int id, String name) {
 		super();
-		this.id = id;
+		this.setId(id);
 		this.name = name;
-	}
-
-	public int getId() {
-		return this.id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
 	}
 
 	public String getName() {

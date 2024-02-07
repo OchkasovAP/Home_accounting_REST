@@ -3,7 +3,6 @@ package ru.ochkasovap.homeAccountingRest.dto;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import ru.ochkasovap.homeAccountingRest.dto.RegistrationDTO.Builder;
 
 public class EditUserDTO {
 	private int id;

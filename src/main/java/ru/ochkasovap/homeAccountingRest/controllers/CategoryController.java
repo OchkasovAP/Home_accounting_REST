@@ -2,9 +2,9 @@ package ru.ochkasovap.homeAccountingRest.controllers;
 
 import jakarta.validation.Valid;
 import ru.ochkasovap.homeAccountingRest.dto.CategoryDTO;
+import ru.ochkasovap.homeAccountingRest.models.Category;
 import ru.ochkasovap.homeAccountingRest.security.UserDetailsImpl;
 import ru.ochkasovap.homeAccountingRest.services.CategoriesService;
-import ru.ochkasovap.homeAccountingRest.util.Category;
 import ru.ochkasovap.homeAccountingRest.util.OperationType;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.CategoryNotValidException;
 import ru.ochkasovap.homeAccountingRest.util.exceptions.HomeAccountingException;

@@ -9,16 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
-
-import ru.ochkasovap.homeAccountingRest.dto.OperationDTO;
-import ru.ochkasovap.homeAccountingRest.models.Income;
-import ru.ochkasovap.homeAccountingRest.models.Outcome;
+import ru.ochkasovap.homeAccountingRest.models.Category;
+import ru.ochkasovap.homeAccountingRest.models.Operation;
 import ru.ochkasovap.homeAccountingRest.models.User;
 import ru.ochkasovap.homeAccountingRest.services.CashAccountsService;
 import ru.ochkasovap.homeAccountingRest.services.CategoriesService;
-import ru.ochkasovap.homeAccountingRest.util.Category;
-import ru.ochkasovap.homeAccountingRest.util.DateUtil;
-import ru.ochkasovap.homeAccountingRest.util.Operation;
 @Component
 public class OperationValidator implements Validator{
 	private final CashAccountsService accountService;
